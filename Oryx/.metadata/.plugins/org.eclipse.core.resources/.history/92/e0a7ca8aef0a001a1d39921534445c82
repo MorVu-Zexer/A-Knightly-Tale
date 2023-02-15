@@ -1,0 +1,59 @@
+public class Card {
+
+//    Variables
+    
+    private Point coordinates = null;
+    private int w, h;
+    private String suit;
+    private String rank;
+    private String color;
+    
+//    Constructor
+    
+    Card(int x, int y, int w, int h){
+        coordinates = new Point(x, y);
+        this.w = w;
+        this.h = h;
+        suit = "";
+        rank = "";
+        color = "";
+    }
+    
+//    Methods
+    
+    public void print() {
+        System.out.println("Suit: " + suit);
+        System.out.println("Rank: " + rank);
+        System.out.println("Color: " + color);
+        System.out.println("");
+    }
+    
+//    Getters
+    
+    public String getSuit() {
+           return suit;
+    }
+    
+    public String getRank() {
+           return rank;
+    }
+    
+    public String getColor() {
+        return color;
+    }
+    
+//    Setters
+    
+    public void setSuit(String s) {
+           suit = s;
+    }
+    
+    public void setRank(String r) {
+           rank = r;
+    }
+    
+    public void setColor(String c) {
+        color = c;
+    }
+    
+}

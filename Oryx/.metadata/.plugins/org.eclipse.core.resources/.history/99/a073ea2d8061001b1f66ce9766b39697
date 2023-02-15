@@ -1,0 +1,25 @@
+/**
+ * Program Name: ShortcutOperatorsDemo.java
+ * Purpose: Shows the use of SHORTCUT ASSIGNMENT operators for +, -, *, /, and % operators.
+ * Coder: Jaden Duong
+ * Date: Jan. 28, 2021
+ */
+
+public class ShortcutOperatorsDemo {
+
+	public static void main(String[] args) {
+		// Start with a variable
+		int num1 = 5;
+		System.out.println("Starting value of num1 is " + num1);
+		
+		// add 6 doing it the LONG WAY
+		num1 = num1 + 6; // PERFECTLY ACCEPTABLE CODE!
+		System.out.println("Value of num1 is now " + num1);
+		
+		// now add 7 using the SHORTCUT ASSIGNMENT operator for addition
+		num1 += 7;
+		System.out.println("Value of num1 is now " + num1);
+	}
+	// end main
+}
+ // end class

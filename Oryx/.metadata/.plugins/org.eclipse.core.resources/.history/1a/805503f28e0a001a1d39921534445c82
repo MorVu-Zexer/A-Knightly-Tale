@@ -1,0 +1,40 @@
+
+public class Deck {
+
+	Card[] card = null;
+	
+	Deck(){
+		
+	}
+	
+	public void assignCards() {
+		for(int i = 1; i <= 4; i++) {
+			for (int j = 1; j <= 13; j++) {
+				if (i == 0) card[((i*13)+j)-1].setSuit("S");
+				else if (i == 1) card[((i*13)+j)-1].setSuit("H");
+				else if (i == 2) card[((i*13)+j)-1].setSuit("C");
+				else if (i == 3) card[((i*13)+j)-1].setSuit("D");
+				
+				if (j == 0) card[((i*13)+j)-1].setRank("Ace");
+				else if (j == 1) card[((i*13)+j)-1].setRank("2");
+				else if (j == 2) card[((i*13)+j)-1].setRank("3");
+				else if (j == 3) card[((i*13)+j)-1].setRank("4");
+				else if (j == 4) card[((i*13)+j)-1].setRank("5");
+				else if (j == 5) card[((i*13)+j)-1].setRank("6");
+				else if (j == 6) card[((i*13)+j)-1].setRank("7");
+				else if (j == 7) card[((i*13)+j)-1].setRank("8");
+				else if (j == 8) card[((i*13)+j)-1].setRank("9");
+				else if (j == 9) card[((i*13)+j)-1].setRank("10");
+				else if (j == 10) card[((i*13)+j)-1].setRank("Jack");
+				else if (j == 11) card[((i*13)+j)-1].setRank("Queen");
+				else if (j == 12) card[((i*13)+j)-1].setRank("King");
+			}
+		}
+		
+		for (int i = 0; i < card.length; i++) {
+			card[i].print();
+		}
+	}
+	
+}
+

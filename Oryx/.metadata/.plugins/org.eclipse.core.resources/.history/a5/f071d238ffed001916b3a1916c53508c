@@ -1,0 +1,406 @@
+package objects;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
+
+public class Batman {
+	
+	private Point coordinates = null; // Coordinates for Batman's hitbox
+	private Point imgCoordinates = null; // Coordinates for Batman's image
+	private int w, h; // Width and height of Batman's hitbox
+	private int imgW, imgH; // Width and height of Batman's image
+	private double gravity;
+	private int deaths;
+/*	FRAMES (by index spot):
+	0-5 = Right; 6-11 = Left;
+	12-17 = Jump Right; 18-19 = Land Right;
+	20-25 = Jump Left; 26-27 = Land Left;
+	28-29 = Crouch Right; 30-31 = Crouch Left;
+*/
+	private BufferedImage[] images = new BufferedImage[32];
+	public int frame, frameTimer = 0; // Frame number, and how often it's changed
+	private boolean left = false, right = false; // Which way Batman is moving
+	private boolean jump = false, landing = false; // Whether or not Batman is jumping or landing
+	private boolean crouching; // Whether or not Batman is crouching
+	private String direction = "Right"; // Which way Batman is facing
+	
+//	Constructor
+	
+	public Batman(int x, int y, int w, int h, double g, int d){
+		try {
+			for (int i = 0; i < images.length; i++) {
+				images[i] = ImageIO.read(new File("src/img/batman" + i + ".png"));
+			}
+		} catch (IOException e) {
+			System.out.println("NOT LOADED");
+		}
+		
+		coordinates = new Point(x, y);
+		imgCoordinates = new Point(x, y);
+		this.w = w;
+		this.h = h;
+		imgW = w;
+		imgH = h;
+		gravity = g;
+		deaths = d;
+	}
+	
+//	Methods
+	
+	public boolean collisionPlatform(Platform p){
+		if (getX() < p.getX() + p.getW() && getY() < p.getY() + p.getH() && p.getX() < getX() + getW() && p.getY() < getY() + getH()) {
+			return true;
+		} else 
+			return false;
+	}
+	
+	public boolean collisionEnemy(Enemy e) {
+		if (getX() < e.getX() + e.getW() && getY() < e.getY() + e.getH() && e.getX() < getX() + getW() && e.getY() < getY() + getH()) {
+			return true;
+		} else 
+			return false;
+	}
+	
+	public void print() {
+//		prints out everything about Batman
+		System.out.println("Coordinates: " + coordinates.getX() + ", " + coordinates.getY());
+		System.out.println("Width: " + getW() + " | Height: " + getH());
+		System.out.println("Gravity: " + getGravity());
+		System.out.println("Deaths: " + getDeaths());
+		System.out.println("Left: " + getLeft() + " | Right: " + getRight());
+		System.out.println("Jumping: " + getJump() + " | Landing: " + getLanding());
+	}
+	
+	public void gravity() {
+//		allows Batman to fall
+		if (getY() < (700 - getH())) {
+			gravity += 0.2;
+			setY(getY() + (int)gravity);
+			setImgY(getImgY() + (int)gravity);
+		} else if (getY() > (700 - getH())) { // This happens when Batman lands
+			gravity = 0;
+			if (jump) {
+				landing = true;
+				jump = false;
+			}
+			setY(700 - getH());
+			setImgY(700 - getH());
+		}
+	}
+	
+	public void jump() {
+//		allows Batman to jump
+		setY(getY() - 10);
+		setImgY(getImgY() - 10);
+	}
+
+	public void crouch() {
+//		allows Batman to crouch
+		setY((getY() + getH()) - getImgH());
+		setH(getImgH());
+	}
+	
+	public void movement(ArrayList<Platform> platform, ArrayList<Enemy> enemy) {
+//		allows Batman to move around
+		if (left) {
+			if (getX() <= 600 - (getW()/2)) {
+				for (int i = 0; i < platform.size(); i++) {
+					platform.get(i).setX(platform.get(i).getX() + 3);
+				}
+				for (int i = 0; i < enemy.size(); i++) {
+					enemy.get(i).setX(enemy.get(i).getX() + 3);
+				}
+			} else {
+				setX(getX() - 3);
+				setImgX(getImgX() - 3);
+			}
+		}
+		if (right) {
+			if (getX() >= 600 - (getW()/2)) {
+				for (int i = 0; i < platform.size(); i++) {
+					platform.get(i).setX(platform.get(i).getX() - 3);
+				}
+				for (int i = 0; i < enemy.size(); i++) {
+					enemy.get(i).setX(enemy.get(i).getX() - 3);
+				}
+			} else {
+				setX(getX() + 3);
+				setImgX(getImgX() + 3);
+			}
+		}
+	}
+	
+	public void draw(Graphics g) {
+//		All of the Batman animation stuff
+		imageResizing();
+		
+		if (getLeft() && getRight()) setDirection("Idle");
+		else if (getLeft()) setDirection("Left");
+		else if (getRight()) setDirection("Right");
+				
+		if (getLanding()) animateLanding(getDirection(), g);
+		else if (getJump()) animateJump(getDirection(), g);
+		else if (getCrouch()) animateCrouch(getDirection(), g);
+		else if (getLeft() || getRight()) animateWalk(getDirection(), g);
+		else if (getDirection() == "Left") frame = 11;
+		else if (getDirection() == "Right") frame = 5;
+		
+		g.drawImage(images[frame], getImgX(), getImgY(), getImgW(), getImgH(), null);
+		g.setColor(Color.white);
+		
+//		Hit box:
+//		g.drawRect(getX(), getY(), getW(), getH());
+		
+//		print();
+	}
+
+	public void animateWalk(String direction, Graphics g) {
+//		animates Batman's walk
+		if (direction == "Left") {
+			frameTimer++;
+			if (frameTimer >= 10) {
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame < 5 || frame > 11) {
+				frame = 6;
+			}
+		} else if (direction == "Right") {
+			frameTimer++;
+			if (frameTimer >= 10) {
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame >= 5) {
+				frame = 0;
+			}
+		}
+	}
+	
+	public void animateJump(String direction, Graphics g) {
+//		animates Batman's jump
+		if (direction == "Left") {
+			frameTimer++;
+			if (frameTimer >= 10) {
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame == 25) {
+				frame = 24;
+			} else if (frame >= 12 && frame <= 17) {
+				frame += 7;
+			} else if (frame < 20 || frame > 25) {
+				frame = 20;
+			}
+		} else if (direction == "Right") {
+			frameTimer++;
+			if (frameTimer >= 10) {
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame == 18) {
+				frame = 17;
+			} else if (frame >= 20 && frame <= 25) {
+				frame -= 7;
+			}
+			else if (frame < 12 || frame > 17) {
+				frame = 12;
+			}
+		}
+	}
+
+	public void animateLanding(String direction, Graphics g) {
+//		animates Batman's landing
+		if (direction == "Left") {
+			frame = 26;
+			frameTimer++;
+			if (frameTimer >= 7) frame = 27;
+			if (frameTimer >= 15) {
+				setLanding(false);
+				frameTimer = 0;
+			}
+		} else if (direction == "Right") {
+			frame = 18;
+			frameTimer++;
+			if (frameTimer >= 7) frame = 19;
+			if (frameTimer >= 15) {
+				setLanding(false);
+				frameTimer = 0;
+			}
+		}
+	}
+	
+	public void animateCrouch(String direction, Graphics g) {
+//		animates Batman's jump
+		if (direction == "Left") {
+			frame = 30;
+			frameTimer++;
+			if (frameTimer >= 10) {
+				frame = 31;
+			}
+		} else if (direction == "Right") {
+			frame = 28;
+			frameTimer++;
+			if (frameTimer >= 10) {
+				frame = 29;
+			}
+		}
+	}
+	
+	public void imageResizing() {
+//		Resizes the image so Batman's size stays consistent
+			setImgX(getX() + (getW()/2) - ((images[frame].getWidth()/2)*2));
+			setImgY(getY() + (getH()/2) - ((images[frame].getHeight()/2)*2));
+			
+			setImgW((images[frame].getWidth()*2));
+			setImgH((images[frame].getHeight()*2));
+	}
+	
+//	Getters
+
+	public int getX() {
+		return coordinates.getX();
+	}
+	
+	public int getY() {
+		return coordinates.getY();
+	}
+	
+	public int getW() {
+		return w;
+	}
+	
+	public int getH() {
+		return h;
+	}
+
+	public int getImgX() {
+		return imgCoordinates.getX();
+	}
+	
+	public int getImgY() {
+		return imgCoordinates.getY();
+	}
+	
+	public int getImgW() {
+		return imgW;
+	}
+	
+	public int getImgH() {
+		return imgH;
+	}
+	
+	public double getGravity() {
+		return gravity;
+	}
+	
+	public int getDeaths() {
+		return deaths;
+	}
+
+	public boolean getLeft() {
+		return left;
+	}
+	
+	public boolean getRight() {
+		return right;
+	}
+	
+	public String getDirection() {
+		return direction;
+	}
+	
+	public boolean getJump() {
+		return jump;
+	}
+	
+	public boolean getLanding() {
+		return landing;
+	}
+	
+	public boolean getCrouch() {
+		return crouching;
+	}
+	
+//	Setters
+	
+	public void setX(int x) {
+		coordinates.setX(x);
+	}
+	
+	public void setY(int y) {
+		coordinates.setY(y);
+	}
+	
+	public void setW(int w) {
+		this.w = w;
+	}
+	
+	public void setH(int h) {
+		this.h = h;
+	}
+
+	public void setImgX(int x) {
+		imgCoordinates.setX(x);
+	}
+	
+	public void setImgY(int y) {
+		imgCoordinates.setY(y);
+	}
+	
+	public void setImgW(int w) {
+		imgW = w;
+	}
+	
+	public void setImgH(int h) {
+		imgH = h;
+	}
+	
+	public void setGravity(double gravity) {
+		this.gravity = gravity;
+	}
+	
+	public void setDeaths(int deaths) {
+		this.deaths = deaths;
+	}
+	
+	public void setLeft(boolean left) {
+		this.left = left;
+	}
+	
+	public void setRight(boolean right) {
+		this.right = right;
+	}
+	
+	public void setDirection(String direction) {
+		this.direction = direction;
+	}
+	
+	public void setJump(boolean jump) {
+		this.jump = jump;
+	}
+	
+	public void setLanding(boolean landing) {
+		this.landing = landing;
+	}
+
+	public void setCrouch(boolean crouching) {
+		this.crouching = crouching;
+	}
+
+	public void setProperties(int x, int y, int w, int h, double g) {
+		setX(x);
+		setY(y);
+		setW(w);
+		setH(h);
+		setGravity(g);
+		setDirection("Right");
+	}
+	
+}

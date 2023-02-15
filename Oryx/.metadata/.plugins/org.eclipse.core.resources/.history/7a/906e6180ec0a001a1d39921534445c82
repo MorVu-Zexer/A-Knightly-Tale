@@ -1,0 +1,44 @@
+
+public class Card {
+
+//	Variables
+	
+	private String suit;
+	private String rank;
+	
+//	Constructor
+	
+	Card(String suit, String rank){
+		this.suit = suit;
+		this.rank = rank;
+	}
+	
+//	Methods
+	
+	public void print() {
+		System.out.println("Suit: " + suit);
+		System.out.println("Rank: " + rank);
+		System.out.println("");
+	}
+	
+//	Getters
+	
+	public String getSuit() {
+		return suit;
+	}
+	
+	public String getRank() {
+		return rank;
+	}
+	
+//	Setters
+	
+	public void setSuit(String s) {
+		suit = s;
+	}
+	
+	public void setRank(String r) {
+		rank = r;
+	}
+	
+}

@@ -1,0 +1,28 @@
+
+public class Deck {
+
+	Card[] card = new Card[52];
+	
+	Deck(){
+		
+	}
+	
+	public void assignCards() {
+		for(int i = 0; i < 4; i++) {
+			for (int j = 0; j < 13; j++) {
+				if (i == 0) card[(i*13)+j].setSuit("Spades");
+				else if (i == 1) card[(i*13)+j].setSuit("Hearts");
+				else if (i == 2) card[(i*13)+j].setSuit("Clubs");
+				else if (i == 3) card[(i*13)+j].setSuit("Diamonds");
+//				
+			}
+		}
+		
+		for (int i = 0; i < card.length; i++) {
+//			card[i].print();
+			System.out.println("Card " + (i+1) + ": " + card[i].getSuit());
+		}
+	}
+	
+}
+

@@ -1,0 +1,68 @@
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+public class GUI extends JPanel implements ActionListener {
+
+    Timer t;
+    
+    Deck deck = new Deck();
+    Card[] card = new Card[52];
+    
+    GUI(){
+        initComponents();
+        t = new Timer(10, this);
+
+//        card[0] = new Card(0, 0, 20, 15);
+//        card[0].setRank("Ace");
+//        card[0].setSuit("Spades");
+//        card[0].setSuit("Black");
+//        card[0].print();
+        deck.assignCards(card);
+        
+        t.start();
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // TODO Auto-generated method stub
+        repaint();
+    }
+    
+// USED FOR INTERACTION THAT INCLUDES DRAGGING OF MOUSE
+    public void dragMouse(MouseEvent e) {
+    }
+
+// USED FOR INTERACTION THAT INCLUDES RELEASING OF MOUSEBUTTON
+    public void releaseMouse(MouseEvent e, Graphics g) {
+    }
+    
+    private void initComponents() {
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                dragMouse(e);
+                repaint();
+            }
+        });
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                Graphics g = null;
+                releaseMouse(e, g);
+            }
+        });
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 400, Short.MAX_VALUE));
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 300, Short.MAX_VALUE));
+
+    }
+    
+}

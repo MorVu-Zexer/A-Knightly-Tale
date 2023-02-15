@@ -1,0 +1,176 @@
+package objects;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class Boss_Bane extends Enemy{
+
+//	Variables
+	
+	private int frame = 0, frameTimer;
+	
+	BufferedImage[] images = new BufferedImage[60];
+	private boolean left = false, right = false;
+	private boolean melee;
+	
+//	Coordinates
+	
+	public Boss_Bane(int x, int y, int w, int h, double g, String d) {
+		super(x, y, w, h, g, d);
+		try {
+			for (int i = 0; i < images.length; i++) {
+				images[i] = ImageIO.read(new File("src/img/Bane/bane" + i + ".png"));
+			}
+		} catch (IOException e) {
+			System.out.println("NOT LOADED");
+		}
+	}
+	
+//	Methods
+	
+	public void movement() {
+		if (getLeft()) {
+			setX(getX() - 2);
+		}
+		if (getRight()) {
+			setX(getX() + 2);
+		}
+	}
+	
+	public void draw(Graphics g) {
+		imageResizing();
+		
+		if (getMelee()) punchAnimation(g, getDirection());
+		else if (getLeft() || getRight()) walkAnimation(g, getDirection());
+		else idleAnimation(g, getDirection());
+		
+//		System.out.println(frame + ", " + images.length);
+		
+		g.drawImage(images[frame], getX(), getY() + 15, getW(), getH(), null);
+		
+//		Bane hitbox
+		g.setColor(Color.RED);
+		g.drawRect(getX(), getY(), getW(), getH());
+	}
+	
+	public void imageResizing() {
+//		Resizes the image so Batman's size stays consistent
+		setX(getX() + (getW() / 2) - ((images[frame].getWidth())));
+		setY(getY() + (getH() / 2) - ((images[frame].getHeight())));
+
+		setW((images[frame].getWidth() * 2));
+		setH((images[frame].getHeight() * 2));
+	}
+	
+	public void idleAnimation(Graphics g, String direction) {
+		frameTimer++;
+		if (direction == "Left") {
+			if (frameTimer > 10){
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame < 10 || frame > 19) {
+				frame = 10;
+			}
+		} else if (direction == "Right") {
+			if (frameTimer > 10){
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame > 9) {
+				frame = 0;
+			}
+		}
+	}
+	
+	public void walkAnimation(Graphics g, String direction) {
+		frameTimer++;
+		if (direction == "Left") {
+			if (frameTimer > 10) {
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame < 52 || frame > 59) {
+				frame = 52;
+			}
+		} else if (direction == "Right") {
+			if (frameTimer > 10) {
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame < 44 || frame > 51) {
+				frame = 44;
+			}
+		}
+	}
+	
+	public void punchAnimation(Graphics g, String direction) {
+		frameTimer++;
+		if (direction == "Left") {
+			if (frameTimer > 5){
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame < 32 || frame > 43) {
+				if (frame == 44) {
+					frame = 43;
+					setMelee(false);
+				}
+				else frame = 32;
+			}
+		} else if (direction == "Right") {
+			if (frameTimer > 5){
+				frame++;
+				frameTimer = 0;
+			}
+			if (frame < 20 || frame > 31) {
+				if (frame == 32) {
+					frame = 31;
+					setMelee(false);
+				}
+				else frame = 20;
+			}
+		}
+	}
+	
+//	Getters
+	
+	public boolean getMelee() {
+		return melee;
+	}
+	
+	public boolean getLeft() {
+		return left;
+	}
+	
+	public boolean getRight() {
+		return right;
+	}
+	
+//	Setters
+
+	public void setMelee(boolean m) {
+		melee = m;
+	}
+	
+	public void setLeft(boolean l) {
+		left = l;
+	}
+	
+	public void setRight(boolean r) {
+		right = r;
+	}
+	
+	public void setProperties(int x, int y, int w, int h, double d) {
+		setX(x);
+		setY(y);
+		setW(w);
+		setH(h);
+		setGravity(d);
+	}
+}

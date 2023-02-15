@@ -1,0 +1,153 @@
+package objects;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.util.ArrayList;
+
+public class Platform {
+
+	Point coordinates = null;
+	int width, height;
+
+//	Constructor
+
+	public Platform(int x, int y, int w, int h) {
+		coordinates = new Point(x, y);
+		width = w;
+		height = h;
+	}
+
+//	Methods
+
+	public boolean move() {
+		return false;
+	}
+
+	public void print() {
+		System.out.println("Coordinates: " + coordinates.getX() + ", " + coordinates.getY());
+		System.out.println("Width: " + getW() + " Height: " + getH());
+	}
+
+	public void draw(Graphics g) {
+		g.setColor(Color.WHITE);
+		g.drawRect(getX(), getY(), getW(), getH());
+	}
+
+	public void collision(Batman batman, ArrayList<Platform> platform) {
+//		Platform collision
+		for (int i = 0; i < platform.size(); i++) {
+			if (batman.collisionPlatform(platform.get(i))) {
+				int xDifference, yDifference;
+				boolean xPositive = true, yPositive = true;
+				if (batman.getX() + batman.getW() < platform.get(i).getX() + (platform.get(i).getW() / 2)) {
+					xDifference = ((batman.getX() + batman.getW()) - platform.get(i).getX());
+				} else {
+					xDifference = ((platform.get(i).getX() + platform.get(i).getW()) - batman.getX());
+					xPositive = false;
+				}
+				if (batman.getY() + batman.getH() < platform.get(i).getY() + (platform.get(i).getH() / 2)) {
+					yDifference = ((batman.getY() + batman.getH()) - platform.get(i).getY());
+				} else {
+					yDifference = ((platform.get(i).getY() + platform.get(i).getH()) - batman.getY());
+					yPositive = false;
+				}
+				if (xDifference < yDifference) {
+					if (xPositive) {
+						batman.setX(batman.getX() - xDifference);
+					} else {
+						batman.setX(batman.getX() + xDifference);
+					}
+				} else if (xDifference > yDifference) {
+					if (yPositive) {
+						batman.setY(batman.getY() - yDifference);
+						batman.setGravity(1.5);
+						if (batman.getJump()) {
+							batman.setLanding(true);
+							batman.setJump(false);
+						}
+					} else {
+						batman.setY(batman.getY() + yDifference);
+					}
+				}
+			}
+		}
+	}
+
+	public void collisionEnemy(ArrayList<Enemy> enemy, ArrayList<Platform> platform) {
+//		Platform collision
+		for (int i = 0; i < platform.size(); i++) {
+			for (int i2 = 0; i2 < enemy.size(); i2++) {
+				if (enemy.get(i2).collisionPlatform(platform.get(i))) {
+					System.out.println(i);
+					int xDifference, yDifference;
+					boolean xPositive = true, yPositive = true;
+					if (enemy.get(i2).getX() + enemy.get(i2).getW() < platform.get(i).getX()
+							+ (platform.get(i).getW() / 2)) {
+						xDifference = ((enemy.get(i2).getX() + enemy.get(i2).getW()) - platform.get(i).getX());
+					} else {
+						xDifference = ((platform.get(i).getX() + platform.get(i).getW()) - enemy.get(i2).getX());
+						xPositive = false;
+					}
+					if (enemy.get(i2).getY() + enemy.get(i2).getH() < platform.get(i).getY()
+							+ (platform.get(i).getH() / 2)) {
+						yDifference = ((enemy.get(i2).getY() + enemy.get(i2).getH()) - platform.get(i).getY());
+					} else {
+						yDifference = ((platform.get(i).getY() + platform.get(i).getH()) - enemy.get(i2).getY());
+						yPositive = false;
+					}
+					if (xDifference < yDifference) {
+						if (xPositive) {
+							enemy.get(i2).setX(enemy.get(i2).getX() - xDifference);
+						} else {
+							enemy.get(i2).setX(enemy.get(i2).getX() + xDifference);
+						}
+					} else if (xDifference > yDifference) {
+						if (yPositive) {
+							enemy.get(i2).setY(enemy.get(i2).getY() - yDifference);
+							enemy.get(i2).setGravity(1.5);
+						} else {
+							enemy.get(i2).setY(enemy.get(i2).getY() + yDifference);
+						}
+					}
+				}
+			}
+		}
+	}
+
+//	Getters
+
+	public int getX() {
+		return coordinates.getX();
+	}
+
+	public int getY() {
+		return coordinates.getY();
+	}
+
+	public int getW() {
+		return width;
+	}
+
+	public int getH() {
+		return height;
+	}
+
+//	Setters
+
+	public void setX(int x) {
+		coordinates.setX(x);
+	}
+
+	public void setY(int y) {
+		coordinates.setY(y);
+	}
+
+	public void setW(int width) {
+		this.width = width;
+	}
+
+	public void setH(int height) {
+		this.height = height;
+	}
+
+}

@@ -1,0 +1,52 @@
+import java.util.Scanner;
+
+/**
+ * Program Name: JD_BusTour.java
+ * Purpose: To be submitted as an exam
+ * Coder: Jaden Duong
+ * Date: Feb. 18, 2021
+ */
+
+public class JD_BusTour {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		
+		// Create a scanner object
+		Scanner s = new Scanner(System.in);
+		
+		// Print out code which will serve as a title, and print the purpose of the program.
+		System.out.println("Welcome to Jaden's Bus Tour Calculator");
+		System.out.println("This program will calculate the number of coaches that will be operated,");
+		System.out.println("the number of available seats, and the number of passengers for a CPA Tours excursion.");
+		System.out.println("--------------------------------------------------------------------------------------\n");
+		
+		// Prompt the user to enter the amount of people on the waiting list. Store the value.
+		System.out.print("Enter the number of people on the waiting list: ");
+		int waitingPeople = s.nextInt();
+		
+		// Prompt the user to enter the amount of seats on a coach. Store the value.
+		System.out.print("Enter the seats on a coach: ");
+		int coachSeats = s.nextInt();
+		
+		// Prompt the user to enter the amout of available drivers. Store the value.
+		System.out.print("Enter the number of available drivers: ");
+		int drivers = s.nextInt();
+		
+		// Flush
+		s.nextLine();
+		
+		// Prompt the user to enter the name of the tour guide. Store the value.
+		System.out.print("Enter the name of the company tour guide for this tour: ");
+		String tourGuide = s.nextLine();
+		
+		// Determine the number of coaches.
+		int numCoaches = Math.round(waitingPeople / coachSeats);
+		
+		System.out.println(numCoaches);
+		// HOUSEKEEPING!
+		s.close();
+	}
+	// end main
+}
+ // end class

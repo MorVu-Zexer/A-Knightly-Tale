@@ -1,0 +1,51 @@
+import java.util.ArrayList;
+
+public class Row {
+	
+//	Variables
+	
+	ArrayList<Card> card;
+	
+//	Constructor
+	
+	Row(){
+		card = new ArrayList<Card>();
+	}
+	
+//	Methods
+	
+	public int rowSize() {
+		return card.size();
+	}
+	
+	public void addCard(Card card) {
+		this.card.add(card);
+	}
+	
+	public void removeCard(Card card) {
+		this.card.remove(this.card.size()-1);
+	}
+	
+	public void revealCards() {
+		for(int i = 0; i < card.size(); i++) {
+			card.get(card.size()-1).setFlipped(false);
+		}
+	}
+
+	public void revealCard() {
+		for(int i = 0; i < card.size(); i++) {
+			if (card.get(card.size()).getFlipped())
+				card.get(card.size()).setFlipped(false);
+		}
+	}
+	
+	public void cardPosition(int i) {
+		for(int j = 0; j < card.size(); j++) {
+			this.card.get(j).setX(110 + (110*i));
+			this.card.get(j).setY(200 + (30*j));
+//			System.out.println(card.get(j).getX() + ", " + card.get(j).getY());
+//			card.get(j).print();
+		}
+	}
+
+}

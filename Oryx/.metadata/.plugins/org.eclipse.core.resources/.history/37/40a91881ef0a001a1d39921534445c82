@@ -1,0 +1,47 @@
+public class Deck {
+
+    Card[] card;
+    
+    Deck(){
+    }
+    
+    public void assignCards(Card[] card) {
+        int i2 = 1;
+        
+        for (int i = 0; i < card.length; i++) {
+            if ((((i-((i2-1)*13))+1)%1) == 0) card[i].setRank("Ace");
+            else if ((((i-((i2-1)*13))+1)%2) == 0) card[i].setRank("2");
+            else if ((((i-((i2-1)*13))+1)%3) == 0) card[i].setRank("3");
+            else if ((((i-((i2-1)*13))+1)%4) == 0) card[i].setRank("4");
+            else if ((((i-((i2-1)*13))+1)%5) == 0) card[i].setRank("5");
+            else if ((((i-((i2-1)*13))+1)%6) == 0) card[i].setRank("6");
+            else if ((((i-((i2-1)*13))+1)%7) == 0) card[i].setRank("7");
+            else if ((((i-((i2-1)*13))+1)%8) == 0) card[i].setRank("8");
+            else if ((((i-((i2-1)*13))+1)%9) == 0) card[i].setRank("9");
+            else if ((((i-((i2-1)*13))+1)%10) == 0) card[i].setRank("10");
+            else if ((((i-((i2-1)*13))+1)%11) == 0) card[i].setRank("Jack");
+            else if ((((i-((i2-1)*13))+1)%12) == 0) card[i].setRank("Queen");
+            else if ((((i-((i2-1)*13))+1)%13) == 0) card[i].setRank("King");
+            
+            if (i2 == 1) card[i].setSuit("Spades");
+            else if (i2 == 2) card[i].setSuit("Hearts");
+            else if (i2 == 3) card[i].setSuit("Clubs");
+            else if (i2 == 4) card[i].setSuit("Diamonds");
+            
+            if (card[i].getSuit() == "Spades" || card[i].getSuit() == "Clubs")
+                card[i].setColor("Black");
+            else card[i].setColor("Red");
+            
+            if (((i+1) % 13) == 0) i2++;
+            
+            card[i].print();
+        }
+        
+//        for (int i = 0; i < card.length; i++) {
+//            card
+//        }
+        
+        
+    }
+    
+}

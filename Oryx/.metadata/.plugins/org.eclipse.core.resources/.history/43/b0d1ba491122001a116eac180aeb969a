@@ -1,0 +1,319 @@
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+public class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
+
+//	Variables
+	
+    Timer t;
+    
+    Deck deck = new Deck();
+    Card[] card = new Card[52];
+    Font f = new Font("Arial Black", 1, 30);
+    Font f1 = new Font("Arial Black", 6, 100);
+            
+    BufferedImage background;
+    Image bg;
+            
+    //TODO add rows
+
+    Row[] row = new Row[8];
+    
+    int mouseX, mouseY;
+    int level=0;
+    
+//  Constructor
+    
+    GUI(){
+        initComponents();
+        t = new Timer(10, this);
+        
+        bufferImages();
+        
+        deck.assignCards();
+        deck.shuffleCards(card);
+        for(int i = 0; i < card.length; i++) {
+//            card[i].print();
+        }
+        assignRows();
+        for(int i = 0; i < row.length; i++) {
+            row[i].cardPosition(i);
+            row[i].revealCards();
+        }
+        assignPile();
+        
+        bg = background;
+        t.start();
+    }
+    
+//  Methods
+    
+    public void bufferImages() {
+    	try {
+			background = ImageIO.read(new File("src/img/SolitaireGame.jpg"));
+		} catch (IOException e) {
+			System.out.println("NOT LOADED");
+		}
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if(level==0)    {
+            
+        }
+        for (int i = 0; i < row.length; i++) {
+            row[i].revealCards();
+        }
+        repaint();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g.drawImage(bg, 0, 0, 1200, 800, null);
+        
+        deck.drawCards(card, g);
+    }
+    
+    public void assignRows() {
+        int temp = 0, temp2 = 0;
+        for(int i = 0; i < row.length; i++) {
+            row[i] = new Row();
+            for(int j = 0; j <= temp; j++) {
+                row[i].addCard(deck.getCard(temp2));
+                card[temp2].setRow(i);
+                temp2++;
+            }
+            temp++;
+        }
+    }
+    
+    public void assignPile() {
+
+        for(int i = 28; i < card.length; i++) {
+            card[i].setX(20);
+            card[i].setY(20);
+        }
+    }
+
+// USED FOR INTERACTION THAT INCLUDES DRAGGING OF MOUSE
+
+//    public void rules() {
+//    // rule 1 Cards cant be placed on the same colored cards
+//     for(int i = 0; i < card.length; i++) {
+//     if(card[i].getSuit()=="Black") {
+//       
+//    
+//    }
+//    }
+//    }
+    
+    public boolean placementRules(Card card1, Card card2) {
+    	/*
+    	 * card1 is the card currently being held.
+    	 * card2 is the card that card1 is being placed on.
+    	 */
+    	
+//    	rule #1: Cards cannot be placed on the same colored card.
+    	if (card1.getColor() != card2.getColor()) {
+//    		rule #2: Cards can only be placed on cards 1 rank higher than itself
+    		if (card1.getRank() == "Queen" && card2.getRank() == "King") {
+    			return true;
+    		} else if (card1.getRank() == "Jack" && card2.getRank() == "Queen") {
+    			return true;
+    		} else if (card1.getRank() == "10" && card2.getRank() == "Jack") {
+    			return true;
+    		} else if (card1.getRank() == "Ace" && card2.getRank() == "2") {
+    			return true;
+    		} else if (card1.getRank() != "Ace" && card1.getRank() != "Jack" && card1.getRank() != "Queen" && card1.getRank() != "King"
+    				&& card2.getRank() != "Ace" && card2.getRank() != "Jack" && card2.getRank() != "Queen" && card2.getRank() != "King"
+    				&& Integer.parseInt(card1.getRank()) == Integer.parseInt(card2.getRank())-1) {
+    			return true;
+    		} else {
+				System.out.println("False 2");
+    			return false;
+    		}
+    	} else {
+			System.out.println("False 3");
+//			card1.print();
+//			card2.print();
+    		return false;
+    	}
+    }
+    
+    public void moveMouse(MouseEvent e) {
+        mouseX = e.getX();
+        mouseY = e.getY();
+    }
+    
+    public void dragMouse(MouseEvent e) {
+        mouseX=e.getX();
+        mouseY=e.getY();
+        
+        boolean held = false;
+        
+        for (int i = 0; i < card.length; i++) {
+            if (!card[i].getHeld()) {
+                held = false;
+            }
+        }
+        for (int i = 0; i < card.length; i++) {
+            if (card[i].getHeld()) {
+                held = true;
+            }
+        }
+        
+        for (int i = 0; i < card.length; i++) {
+            if (!deck.getFlipped(i)) {
+                if (mouseX > deck.getCardX(i) && deck.getCardX(i) + deck.getCardW(i) > mouseX
+                        && mouseY > deck.getCardY(i) && deck.getCardY(i) + deck.getCardH(i) > mouseY) {
+                    if (!held || held && card[i].getHeld()) {
+                        deck.setCardX(mouseX - (deck.getCardW(i)/2), i);
+                        deck.setCardY(mouseY - (deck.getCardH(i)/2), i);
+                        card[i].setHeld(true);
+                    }
+                } else {
+                        card[i].setHeld(false);
+                }
+            }
+        }
+    }
+
+    public void releaseMouse(MouseEvent e) {
+    	boolean temp = false;
+        for (int i = 0; i < card.length; i++) {
+            if (card[i].getHeld()) {
+                for (int j = 0; j < card.length; j++) {
+                    if ((card[i].getX() + card[i].getW() > card[j].getX() && card[j].getX() + card[j].getW() > card[i].getX()
+                            && card[i].getY() + card[i].getH() > card[j].getY() && card[j].getY() + card[j].getH() > card[i].getY())
+                            && !temp && !card[j].getFlipped() && placementRules(card[i], card[j])) {
+
+                    	System.out.println(card[i].getX() + card[i].getW() + ", " + card[j].getX());
+                    	System.out.println(card[j].getX() + card[j].getW() + ", " + card[i].getX());
+                    	System.out.println(card[i].getY() + card[i].getH() + ", " + card[j].getY());
+                    	System.out.println(card[j].getY() + card[j].getH() + ", " + card[i].getY());
+                    	
+                        row[card[j].getRow()].addCard(card[i]);
+                        row[card[i].getRow()].removeCard(card[i]);
+                        card[i].setRow(card[j].getRow());
+                        card[i].setX(card[j].getX());
+                        card[i].setY(card[j].getY() + 15);
+                        temp = true;
+                        System.out.println("Scenario 1: Valid placement");
+                    } else if (temp){
+                        System.out.println("Scenario 2: Successfully placed");
+                    } else {
+                    	System.out.println((card[i].getX() + card[i].getW() > card[j].getX()) + ", " + (card[j].getX() + card[j].getW() > card[i].getX()) + ", " + 
+                                (card[i].getY() + card[i].getH() > card[j].getY()) + ", " + (card[j].getY() + card[j].getH() > card[i].getY()));
+                    	
+                    	System.out.println(card[i].getX() + card[i].getW() + ", " + card[j].getX());
+                    	System.out.println(card[j].getX() + card[j].getW() + ", " + card[i].getX());
+                    	System.out.println(card[i].getY() + card[i].getH() + ", " + card[j].getY());
+                    	System.out.println(card[j].getY() + card[j].getH() + ", " + card[i].getY());
+                    	
+                    	card[i].setX(110 + (110*card[i].getRow()));
+                    	card[i].setY(200 + (30*(row[card[i].getRow()].rowSize()-1)));
+                        card[i].print();
+                        card[j].print();
+                        System.out.println("Scenario 3: Invalid placement");
+                    }
+                }
+            }
+        }
+        System.out.println(temp);
+    }
+    
+    private void initComponents() {
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                dragMouse(e);
+                repaint();
+            }
+            public void mouseMoved(MouseEvent e) {
+                moveMouse(e);
+                repaint();
+            }
+        });
+        addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                releaseMouse(e);
+            }
+        });
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 400, Short.MAX_VALUE));
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 300, Short.MAX_VALUE));
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+    
+    public void mouseMoved(MouseEvent e) {
+        
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        // TODO Auto-generated method stub
+        mouseX=e.getX();
+        mouseY=e.getY();
+        System.out.println(mouseX+","+mouseY);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    public void playfont(Graphics g) {
+        // TODO Auto-generated method stub
+        if (mouseX > 550 && mouseX < 550+100 && mouseY > 250 && mouseY < 250+50) {
+            setFont(f1);
+            g.drawString("PLAY", 480, 310);
+        } else {
+            setFont(f);
+            g.drawString("PLAY", 555, 285);
+        }
+    }
+}

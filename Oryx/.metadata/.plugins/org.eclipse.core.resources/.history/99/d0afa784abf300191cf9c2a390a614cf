@@ -1,0 +1,380 @@
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
+import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.Timer;
+
+import objects.Batarang;
+import objects.Batman;
+import objects.Boss_Bane;
+import objects.Enemy;
+import objects.Platform;
+import objects.Punch;
+
+public class GUI extends JPanel implements ActionListener, KeyListener {
+	// VARIABLES THAT NEED TO BE ACCESSED BY ALL METHODS
+	// NOTE THAT IF ITS NOT SUPER OBVIOUS YOU SHOULD HAVE A COMMENT INDICATING WHAT
+	// THESE VARIABLES ARE USED FOR
+	Timer t;
+
+	Font arial = new Font("arial", 0, 50);
+
+	Batman batman = new Batman(10, 10, 96, 162, 1.5, 0);
+	ArrayList<Punch> punch = new ArrayList<Punch>();
+	ArrayList<Batarang> batarang = new ArrayList<Batarang>();
+	Platform[] platform = new Platform[11];
+	Enemy[] enemy = new Enemy[9];
+//	Bane X: 7000
+	Boss_Bane bane = new Boss_Bane(500, 0, 200, 200, 1.5, "Left");
+	
+	BufferedImage[] images = new BufferedImage[1];
+
+	public GUI() {
+		initComponents();
+		t = new Timer(10, this);
+		t.start();
+
+		// LOAD ANY IMAGES HERE:
+		try {
+			images[0] = ImageIO.read(new File("src/img/batarangIcon.png"));
+		} catch (IOException e) {
+			System.out.println("NOT LOADED");
+		}
+
+		platform[0] = new Platform(0, 500, 400, 400);
+		platform[1] = new Platform(600, 350, 600, 600);
+		platform[2] = new Platform(1200, 550, 400, 650);
+		platform[3] = new Platform(1850, 450, 700, 650);
+		platform[4] = new Platform(2750, 300, 400, 50);
+		platform[5] = new Platform(3150, 700, 600, 100);
+		platform[6] = new Platform(4000, 600, 800, 200);
+		platform[7] = new Platform(4800, 500, 100, 300);
+		platform[8] = new Platform(4900, 350, 900, 500);
+		platform[9] = new Platform(5800, 700, 1500, 500);
+		platform[10] = new Platform(7300, 0, 900, 800);
+
+		enemy[0] = new Enemy(750, 0, 90, 160, 1.5, "Left");
+		enemy[1] = new Enemy(1900, 0, 90, 160, 1.5, "Right");
+		enemy[2] = new Enemy(2400, 0, 90, 160, 1.5, "Left");
+		enemy[3] = new Enemy(2800, 0, 90, 160, 1.5, "Right");
+		enemy[4] = new Enemy(3600, 0, 90, 160, 1.5, "Right");
+		enemy[5] = new Enemy(4200, 0, 90, 160, 1.5, "Right");
+		enemy[6] = new Enemy(4000, 0, 90, 160, 1.5, "Right");
+		enemy[7] = new Enemy(4500, 0, 90, 160, 1.5, "Left");
+		enemy[8] = new Enemy(5000, 0, 90, 160, 1.5, "Left");
+	}
+
+	/// Paints background
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		g.setFont(arial);
+		g.fillRect(0, 0, 1200, 1000);
+		// next line that draws image
+
+		for (int i = 0; i < platform.length; i++) {
+			platform[i].draw(g);
+		}
+		for (int i = 0; i < enemy.length; i++) {
+			if (enemy[i].getAlive()) {
+				enemy[i].draw(g);
+//				Health bars
+//				System.out.println((enemy[0].getHP()*(enemy[0].getW())/90) + ", " + enemy[0].getHP());
+				g.setColor(Color.RED);
+				g.fillRect(enemy[i].getX(), enemy[i].getY()-25, (enemy[i].getHP()*(enemy[i].getW())/100), 15);
+				g.setColor(Color.WHITE);
+				g.drawRect(enemy[i].getX(), enemy[i].getY()-25, enemy[i].getW(), 15);
+			}
+		}
+		for (int i = 0; i < batarang.size(); i++) {
+			batarang.get(i).draw(g);
+		}
+		for (int i = 0; i < punch.size(); i++) {
+			if (batman.getDirection() == "Right") punch.get(i).draw(batman.getX() + ((batman.getW() / 2) + 30), batman.getY() + 30, g);
+			else if (batman.getDirection() == "Left") punch.get(i).draw(batman.getX() + ((batman.getW() / 2) - 90), batman.getY() + 30, g);
+				
+		}
+		batman.draw(g);
+		
+		bane.draw(g);
+		
+		drawAmmo(g);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		batmanActions();
+		enemyActions();
+		baneActions();
+		batarangActions();
+//		Platform collision for Batman and Enemies
+		for (int i = 0; i < platform.length; i++) {
+			if (batman.collisionPlatform(platform[i])) {
+				if (i == 4) {
+					platform[i].setY(platform[i].getY() + 1);
+				}
+				platform[i].collision(batman, platform);
+			}
+			for (int i2 = 0; i2 < enemy.length; i2++) {
+				if (enemy[i2].collisionPlatform(platform[i])) {
+					platform[i].collisionEnemy(enemy, platform);
+				}
+			}
+			if (bane.collisionPlatform(platform[i])) {
+				platform[i].collisionBane(bane,  platform);
+			}
+		}
+//		Enemy collision with Batman
+		for (int i = 0; i < enemy.length; i++) {
+			if (enemy[i].getAlive()) {
+//				if (batman.collisionEnemy(enemy[i])) {
+//					batman.setDeaths(batman.getDeaths() + 1);
+//					reset();
+//				}
+			}
+//			Batarang collision with Enemy
+			for (int i2 = 0; i2 < batarang.size(); i2++) {
+				if (enemy[i].collisionBatarang(batarang.get(i2)) && enemy[i].getAlive()) {
+					enemy[i].setHP(enemy[i].getHP() - 25);
+					batarang.remove(i2);
+				}
+			}
+			for (int i2 = 0; i2 < punch.size(); i2++) {
+				if (enemy[i].collisionPunch(punch.get(i2)) && enemy[i].getAlive()) {
+					enemy[i].setHP(enemy[i].getHP() - 40);
+				}
+			}
+		}
+//		Kills Enemy
+		for (int i = 0; i < enemy.length; i++) {
+			if (enemy[i].getHP() <= 0) {
+				if (enemy[i].getAlive())
+						batman.setBatarangs(batman.getBatarangs() + 1);
+				enemy[i].setAlive(false);
+			}
+		}
+//		Falling out of the world
+		if (batman.getY() > 800) {
+			batman.setDeaths(batman.getDeaths() + 1);
+			reset();
+		}
+		repaint();
+	}
+
+	public void reset() {
+//		Resets Batman
+		batman.setProperties(10, 10, 96, 162, 1.5);
+//		Resets platforms
+		platform[0].setProperties(0, 500, 400, 400);
+		platform[1].setProperties(600, 350, 600, 600);
+		platform[2].setProperties(1200, 550, 400, 650);
+		platform[3].setProperties(1850, 450, 700, 650);
+		platform[4].setProperties(2750, 300, 400, 50);
+		platform[5].setProperties(3150, 700, 600, 100);
+		platform[6].setProperties(4000, 600, 800, 200);
+		platform[7].setProperties(4800, 500, 100, 300);
+		platform[8].setProperties(4900, 350, 900, 500);
+		platform[9].setProperties(5800, 700, 1500, 500);
+		platform[10].setProperties(7300, 0, 900, 800);
+//		Resets enemies
+		for (int i = 0; i < enemy.length; i++) {
+			enemy[i].setAlive(true);
+			enemy[i].setHP(100);
+		}
+		enemy[0].setProperties(750, 0, 90, 160, 1.5, "Left");
+		enemy[1].setProperties(1900, 0, 90, 160, 1.5, "Right");
+		enemy[2].setProperties(2400, 0, 90, 160, 1.5, "Left");
+		enemy[3].setProperties(2800, 0, 90, 160, 1.5, "Right");
+		enemy[4].setProperties(3600, 0, 90, 160, 1.5, "Right");
+		enemy[5].setProperties(4200, 0, 90, 160, 1.5, "Right");
+		enemy[6].setProperties(4000, 0, 90, 160, 1.5, "Right");
+		enemy[7].setProperties(4500, 0, 90, 160, 1.5, "Left");
+		enemy[8].setProperties(5000, 0, 90, 160, 1.5, "Left");
+//		Resets Bane
+		bane.setProperties(7000, 0, 200, 200, 1.5);
+//		Resets batarangs
+		for (int i = 0; i < batarang.size(); i++) {
+			batarang.remove(i);
+		}
+		batman.setBatarangs(5);
+	}
+
+	public void batmanActions() {
+//		everything that moves batman
+		batman.gravity();
+		batman.movement(platform, enemy, bane);
+		batman.attack(punch, batarang);
+		if (batman.getJump() && !batman.getLanding())
+			batman.jump();
+		else if (batman.getCrouch())
+			batman.crouch();
+	}
+
+	public void enemyActions() {
+//		everything that moves enemies
+		for (int i = 0; i < enemy.length; i++) {
+			if (enemy[i].getAlive()) {
+				enemy[i].gravity();
+				enemy[i].movement(platform);
+			}
+		}
+	}
+
+	public void baneActions() {
+		bane.gravity();
+		bane.movement();
+//		sets Bane's direction
+		if (batman.getX() > 5800) {
+			if (batman.getX() + (batman.getW()/2) > bane.getX() + (bane.getW()/2)) {
+				bane.setDirection("Right");
+				bane.setLeft(true);
+				bane.setRight(false);
+			} else {
+				bane.setDirection("Left");
+				bane.setRight(true);
+				bane.setLeft(false);
+			}
+		}
+		
+	}
+	
+	public void batarangActions() {
+		for (int i = 0; i < batarang.size(); i++) {
+//			batarang.get(i).gravity();
+			batarang.get(i).moveBatarang();
+			if (batarang.get(i).getX() > 1200 || batarang.get(i).getX() + batarang.get(i).getW() < 0
+					|| batarang.get(i).getY() > 800 || batarang.get(i).getY() + batarang.get(i).getH() < 0) {
+				batarang.remove(i);
+			}
+		}
+	}
+
+	public void drawAmmo(Graphics g) {
+		g.drawImage(images[0], 20, 710, 100, 44, null);
+		
+		g.setColor(Color.WHITE);
+		g.drawString(" x", 120, 740);
+		g.drawString(" " + batman.getBatarangs(), 160, 745);
+	}
+	
+	// USED FOR INTERACTION THAT INCLUDES DRAGGING OF MOUSE
+	public void dragMouse(MouseEvent e) {
+	}
+
+	// USED FOR INTERACTION THAT INCLUDES RELEASING OF MOUSEBUTTON
+	public void releaseMouse(MouseEvent e, Graphics g) {
+	}
+
+	// DON't TOUCH THE INITIALIZING COMPONENTS METHOD
+	private void initComponents() {
+		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+		this.setLayout(layout);
+		this.addMouseMotionListener(new MouseMotionAdapter() {
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				dragMouse(e);
+				repaint();
+			}
+		});
+		addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseReleased(MouseEvent e) {
+				Graphics g = null;
+				releaseMouse(e, g);
+			}
+		});
+		layout.setHorizontalGroup(
+				layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 400, Short.MAX_VALUE));
+		layout.setVerticalGroup(
+				layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 300, Short.MAX_VALUE));
+
+	}
+
+//	Key input
+
+	public void keyReleased(KeyEvent e) {
+		// method initiated when a key is released
+		if (e.getKeyCode() == KeyEvent.VK_A) {
+			batman.setLeft(false);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_D) {
+			batman.setRight(false);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_S && !batman.getJump()) {
+			batman.setCrouch(false);
+			batman.setH(162);
+			batman.setY(batman.getY() - 56);
+		}
+
+		if (e.getKeyCode() == KeyEvent.VK_H) {
+			bane.setLeft(false);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_K) {
+			bane.setRight(false);
+		}
+//		if (e.getKeyCode() == KeyEvent.VK_Q) {
+//			batman.setRanged(false);
+//		}
+	}
+
+	public void keyPressed(KeyEvent e) {
+		// method initiated when a key is pressed
+		if (e.getKeyCode() == KeyEvent.VK_A) {
+			batman.setDirection("Left");
+			batman.setLeft(true);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_D) {
+			batman.setDirection("Right");
+			batman.setRight(true);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_S && !batman.getJump()) {
+			batman.setCrouch(true);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_SPACE || e.getKeyCode() == KeyEvent.VK_W) {
+			batman.setJump(true);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_E && batman.getAttackRate() == 0) {
+			batman.setMelee(true);
+			batman.setAttackRate(1);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_Q && batman.getAttackRate() == 0) {
+			batman.setRanged(true);
+			batman.setAttackRate(1);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_J) {
+			bane.setMelee(true);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_H) {
+			bane.setDirection("Left");
+			bane.setLeft(true);
+		}
+		if (e.getKeyCode() == KeyEvent.VK_K) {
+			bane.setDirection("Right");
+			bane.setRight(true);
+		}
+		
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+		// TODO Auto-generated method stub
+
+	}
+}

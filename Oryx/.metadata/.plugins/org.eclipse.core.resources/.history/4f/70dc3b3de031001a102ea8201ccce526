@@ -1,0 +1,118 @@
+package objects;
+
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+public class BossBullet extends Bullet {
+
+//	Variables
+	
+	private double angle; // The literal angle
+	private double angleX; // How much the bullet needs to move along the x axis to match angle
+	private double angleY; // How much the bullet needs to move along the y axis to match angle
+	
+	private double speed;
+	
+	private String type;
+	
+	private BufferedImage normal;
+	private BufferedImage inverse;
+
+	AffineTransform at = new AffineTransform();
+	
+//	Constructor
+	
+	BossBullet(int x, int y, int w, int h, double speed, String type) {
+		super(x, y, w, h);
+		this.type = type;
+		this.speed = speed;
+		bufferImages();
+	}
+	
+//	Methods
+	
+	public void bufferImages(){
+		try {
+		    normal = ImageIO.read(new File("src/images/BossBulletDefault.png"));
+		} catch (IOException e) { 
+		}
+		try {
+		    inverse = ImageIO.read(new File("src/images/BossBullet1.png"));
+		} catch (IOException e) { 
+		}
+	}
+	
+	public void draw(Graphics g, Graphics2D g2d) {
+		at.rotate(Math.toRadians(angle), super.getX() + (super.getW()/2), super.getY() + (super.getY()/2));
+		g2d.transform(at);
+		if (type == "Inverse")
+			g.drawImage(inverse, super.getX(), super.getY(), super.getW(), super.getH(), null);
+		else
+			g.drawImage(normal, super.getX(), super.getY(), super.getW(), super.getH(), null);
+	
+		try{
+	        g2d.transform(at.createInverse());
+	    }catch(NoninvertibleTransformException e){
+	        //...
+	    }
+
+		at.setToIdentity(); 
+
+	}
+	
+	public void move() {
+		super.setX((int)((double)super.getX() - angleX * speed));
+		super.setY((int)((double)super.getY() - angleY * speed));
+	}
+	
+//	Getters
+
+	public double getAngle() {
+		return angle;
+	}
+	
+	public double getAngleX() {
+		return angleX;
+	}
+	
+	public double getAngleY() {
+		return angleY;
+	}
+	
+	public double getSpeed() {
+		return speed;
+	}
+	
+	public String getType() {
+		return type;
+	}
+	
+//	Setters
+	
+	public void setAngle(double a) {
+		angle = a;
+	}
+	
+	public void setAngleX(double aX) {
+		angleX = aX;
+	}
+	
+	public void setAngleY(double aY) {
+		angleY = aY;
+	}
+	
+	public void setSpeed(double s) {
+		speed = s;
+	}
+	
+	public void setType(String t) {
+		type = t;
+	}
+}

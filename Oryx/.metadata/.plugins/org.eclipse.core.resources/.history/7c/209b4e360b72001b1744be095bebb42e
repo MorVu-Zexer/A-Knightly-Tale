@@ -1,0 +1,38 @@
+import java.util.Random;
+
+/**
+ * Program Name: CoinFlip.java
+ * Purpose: Simulates infinite coin flips and prints out
+ * 			the percentage of heads in real time
+ * Coder: Jaden Duong
+ * Date: Feb. 18, 2021
+ */
+
+public class CoinFlip {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		
+		Random r = new Random();
+		
+		int rando;
+		double heads = 0, tails = 0;
+		
+		while (true) {
+			// Sets the new value of rando. The "coin flip".
+			rando = r.nextInt(2);
+			
+			// Adds to either heads or tails, depending on the value of rando.
+			if (rando == 0) {
+				heads++;
+			} else {
+				tails++;
+			}
+			
+			System.out.println((heads / (heads + tails)) * 100 + "%");
+		}
+
+	}
+	// end main
+}
+ // end class

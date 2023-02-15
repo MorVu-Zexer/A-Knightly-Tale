@@ -1,0 +1,105 @@
+package objects;
+
+import java.awt.Color;
+import java.awt.Graphics;
+
+public class Enemy {
+	
+	Point coordinates = null;
+	int w, h;
+	double gravity;
+	String direction;
+	
+	public Enemy(int x, int y, int w, int h, double g, String direction){
+		coordinates = new Point(x, y);
+		this.w = w;
+		this.h = h;
+		gravity = g;
+		this.direction = direction;
+	}
+	
+	public void movement() {
+		setX(getX() + 1);
+	}
+	
+	public void gravity() {
+//		allows Enemy to fall
+		if (getY() < (700 - getH())) {
+			gravity += 0.2;
+			setY(getY() + (int)gravity);
+		} else if (getY() > (700 - getH())) { // This happens when Batman lands
+			gravity = 0;
+			setY(700 - getH());
+		}
+	}
+	
+	public boolean collisionPlatform(Platform p){
+		if (getX() < p.getX() + p.getW() && getY() < p.getY() + p.getH() && p.getX() < getX() + getW() && p.getY() < getY() + getH()) {
+			return true;
+		} else 
+			return false;
+	}
+	
+	public void print() {
+		System.out.println("Coordinates: " + getX() + ", " + getY());
+		System.out.println("Width: " + getW() + " Height: " + getH());
+		System.out.println("Direction: " + direction);
+	}
+	
+	public void draw(Graphics g) {
+		g.setColor(Color.RED);
+		g.drawRect(getX(), getY(), getW(), getH());
+	}
+	
+//	Getters
+	
+	public int getX() {
+		return coordinates.getX();
+	}
+	
+	public int getY() {
+		return coordinates.getY();
+	}
+	
+	public int getW() {
+		return w;
+	}
+	
+	public int getH() {
+		return h;
+	}
+	
+	public String getDirection() {
+		return direction;
+	}
+	
+	public double getGravity() {
+		return gravity;
+	}
+	
+//	Setters
+
+	public void setX(int x) {
+		coordinates.setX(x);
+	}
+
+	public void setY(int y) {
+		coordinates.setY(y);
+	}
+
+	public void setW(int w) {
+		this.w = w;
+	}
+
+	public void setH(int h) {
+		this.h = h;
+	}
+
+	public void setDirection(String direction) {
+		this.direction = direction;
+	}
+	
+	public void setGravity(double gravity) {
+		this.gravity = gravity;
+	}
+}

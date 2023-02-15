@@ -1,0 +1,70 @@
+package objects;
+
+import java.util.ArrayList;
+
+public class AttackList {
+
+	AttackList(){
+		
+	}
+	
+	public void flower(ArrayList<BossBullet> bullet, int x, int y) {
+		// spawn bullets
+//			if (bulletCount.size() < 2) {
+//				for (int i = 0; i < 2; i++) {
+//					bulletCount.add(0);
+//				}
+//			}
+//			if (bulletAngle.size() < 1) {
+//				for (int i = 0; i < 1; i++) {
+//					bulletAngle.add(0.0);
+//				}
+//			}
+//				bossShot.add(true);
+//				bossBulletType.add("Directed");
+//				bossBulletX.add(x);
+//				bossBulletY.add(y);
+//				bossBulletW.add(10.0);
+//				bossBulletH.add(20.0);
+//				bossAngleX.add(Math.sin(Math.toRadians(bulletAngle.get(0))));     
+//				bossAngleY.add(Math.cos(Math.toRadians(bulletAngle.get(0))));
+//				bossBulletAimAngle.add(Math.toDegrees(-1.0602875205865552) * bulletCount.get(0));
+//				bossBulletSpeed.add(1.5);
+//					removeImmune.add(false);
+//				
+//				bossShot.add(true);
+//				bossBulletType.add("Directed");
+//				bossBulletX.add(x);
+//				bossBulletY.add(y);
+//				bossBulletW.add(10.0);
+//				bossBulletH.add(20.0);
+//				bossAngleX.add(Math.cos(Math.toRadians(bulletAngle.get(0))));     
+//				bossAngleY.add(Math.sin(Math.toRadians(bulletAngle.get(0))));
+//				bossBulletAimAngle.add((Math.toDegrees(1.0602875205865552) * bulletCount.get(1))+90);
+//				bossBulletSpeed.add(1.5);
+//	            	removeImmune.add(false);
+//				
+//				bulletCount.set(0, bulletCount.get(0) + 1);
+//				bulletCount.set(1, bulletCount.get(1) + 1);
+//				bulletAngle.set(0, bulletAngle.get(0) + 60.75);
+
+		bullet.add(new BossBullet(x, y, 10, 20, 1.5, "Directed"));
+		
+//		bullet.get(bullet.size()-1).setAngle(Math.toDegrees(-1.0602875205865552) * bullet.size()-1);
+		bullet.get(bullet.size()-1).setAngle(-60.75 * bullet.size()-1);
+		
+		bullet.get(bullet.size()-1).setAngleX(Math.sin(Math.toRadians(bullet.get(bullet.size()-1).getAngle())));     
+		bullet.get(bullet.size()-1).setAngleY(Math.cos(Math.toRadians(bullet.get(bullet.size()-1).getAngle())));
+		
+//2nd set
+		
+//		bullet.add(new BossBullet(x, y, 10, 20, 1.5, "Directed"));
+//		
+////		bullet.get(bullet.size()-1).setAngle((Math.toDegrees(1.0602875205865552) * bullet.size()-1)+90);
+//		bullet.get(bullet.size()-1).setAngle(60.75 * bullet.size()-1);
+//		
+//		bullet.get(bullet.size()-1).setAngleX(Math.cos(Math.toRadians(bullet.get(bullet.size()-1).getAngle())));     
+//		bullet.get(bullet.size()-1).setAngleY(Math.sin(Math.toRadians(bullet.get(bullet.size()-1).getAngle())));
+	}
+	
+}

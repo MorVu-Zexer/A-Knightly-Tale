@@ -1,0 +1,715 @@
+package oryx;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
+import javax.swing.Timer;
+
+import bullets.Bullet;
+import bullets.PlayerBullet;
+import enemies.Enemies;
+import enemies.Hugsbert;
+import enemies.MadMask;
+import enemies.MudMuk;
+import enemies.SpyEye;
+
+import javax.imageio.ImageIO;
+import javax.swing.JPanel;
+
+public class Display extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
+
+	// String path = System.getProperty("home.dir");
+
+	/*
+	 * SpyEye - fires in all directions MudMuk - fires straight at the player in a
+	 * shotgun pattern Hugsbert - predicts where the player will be MadMask -
+	 * periodically rapid fires at the player
+	 */
+
+	Oryx oryx = new Oryx();
+	Player player = new Player((oryx.frame.getWidth() / 2) - 10, (oryx.frame.getHeight() / 2) - 10, 20, 20);
+	ArrayList<Enemies> enemy = new ArrayList<Enemies>();
+	
+	ArrayList<Bullet> bullet = new ArrayList<Bullet>();
+	
+	ArrayList<PowerUp> powerUp = new ArrayList<PowerUp>();
+
+//	int x = (oryx.frame.getWidth() / 2) - 10, y = (oryx.frame.getHeight() / 2) - 10;
+//	int locationX = x, locationY = y;
+	int movementTrackerX = 0, movementTrackerY = 0;
+
+	boolean playerAlive = true;
+//	int playerHP = 100;
+	boolean up = false, down = false, left = false, right = false;
+	boolean shooting = false;
+
+	boolean ability = false;
+//	double mana = 100;
+
+	int regen = 0;
+	int regenUp = 0;
+	int manaUp = 0;
+	int damageUp = 0;
+	int defenseUp = 0;
+	int powerUpAnimation = 0;
+
+	int shootingCounter = 0;
+
+	int hiScore, killCount = 0;
+
+	int mouseX = 0, mouseY = 0;
+
+	int barrierX = -2000, barrierY = -2000, barrierW = 5000, barrierH = 5000;
+
+	int spawnRate;
+
+	String[] enemyNames = { "SpyEye", "MudMuk", "Hugsbert", "MadMask" };
+	
+	Random random = new Random();
+
+	ArrayList<Integer> gravesX = new ArrayList<Integer>();
+	ArrayList<Integer> gravesY = new ArrayList<Integer>();
+
+	Timer t;
+
+	AffineTransform at = new AffineTransform();
+	
+	// Image player = Toolkit.getDefaultToolkit().getImage(path +
+	// "/src/images/BulletHellShip.png");
+
+	public Display() throws IOException {
+		initComponents();
+		t = new Timer(1, this);
+		t.start();
+
+		previousDeaths();
+	}
+	
+	public void highScoreWriter(int highScore) throws IOException {
+		String path = System.getProperty("user.dir");
+		File file = new File(path + "/src/oryx/hiScore.txt");
+		Scanner s = new Scanner(file);
+		String line;
+		line = s.nextLine();
+		highScore = Integer.parseInt(line);
+		if (killCount > highScore) {
+			highScore = killCount;
+			FileWriter output = new FileWriter(file);
+			output.write(new Integer(highScore).toString());
+			output.close();
+		}
+		this.hiScore = highScore;
+		s.close();
+	}
+
+	public void previousDeaths() throws IOException {
+		String path = System.getProperty("user.dir");
+		File file = new File(path + "/src/oryx/deadPlayers.txt");
+		Scanner s = new Scanner(file);
+		if (s.hasNextLine()) {
+			String line = s.nextLine();
+			String[] coordinates = line.split(" ");
+			for (int i = 0; i < coordinates.length; i++) {
+				String[] chopped = coordinates[i].split(",");
+				gravesX.add(Integer.parseInt(chopped[0]));
+				gravesY.add(Integer.parseInt(chopped[1]));
+			}
+		}
+
+		// while (s.hasNext()) {
+		// line = s.nextLine();
+		// chopped = line.split(", ");
+		// gravesX.add(Integer.parseInt(chopped[0]));
+		// gravesY.add(Integer.parseInt(chopped[1]));
+		// }
+		s.close();
+	}
+
+	public void recordDeath(int x, int y) throws IOException {
+		String path = System.getProperty("user.dir");
+		File file = new File(path + "/src/oryx/deadPlayers.txt");
+		FileWriter output = new FileWriter(file);
+		for (int i = 0; i < gravesX.size(); i++) {
+			output.write(new Integer(gravesX.get(i) + movementTrackerX).toString());
+			output.write(",");
+			output.write(new Integer(gravesY.get(i) + movementTrackerY).toString());
+			output.write(" ");
+		}
+		output.write(new Integer(x).toString());
+		output.write(",");
+		output.write(new Integer(y).toString());
+		output.write(" ");
+		output.close();
+	}
+
+	public void drawPreviousDeaths(Graphics g) {
+		int[] gravesX2 = new int[gravesX.size()];
+		int[] gravesY2 = new int[gravesY.size()];
+		for (int i = 0; i < gravesX.size(); i++) {
+			gravesX2[i] = gravesX.get(i);
+			gravesY2[i] = gravesY.get(i);
+			drawDeadPlayer(gravesX2[i], gravesY2[i], g);
+		}
+	}
+	
+	public void spawning() {
+		
+		spawnRate = random.nextInt(500) + 1;
+
+		if (spawnRate == 500) {
+			double spawnPointX = random.nextInt((barrierX + barrierW) - 100) + barrierX + 100;
+			double spawnPointY = random.nextInt((barrierY + barrierH) - 100) + barrierY + 100;
+
+			String name = enemyNames[random.nextInt(4)];
+			
+//			0 - SpyEye
+//			1 - MudMuk
+//			2 - Hugsbert
+//			3 - MadMask
+			
+			switch (name) {
+				case "SpyEye" : {
+					enemy.add(new SpyEye(spawnPointX, spawnPointY));
+					break;
+				}
+				case "MudMuk" : {
+					enemy.add(new MudMuk(spawnPointX, spawnPointY));
+					break;
+				}
+				case "Hugsbert" : {
+					enemy.add(new Hugsbert(spawnPointX, spawnPointY));
+					break;
+				}
+				case "MadMask" : {
+					enemy.add(new MadMask(spawnPointX, spawnPointY));
+					break;
+				}
+			}
+		}
+	}
+
+	public void drawDeadPlayer(int x, int y, Graphics g) {
+		int[] graveX = { x + 4, x + 4, x + 20, x + 20, x + 24, x + 24, x, x };
+		int[] graveY = { y + 4, y, y, y + 4, y + 4, y + 28, y + 28, y + 4 };
+		Color graveGray = new Color(200, 200, 200);
+		g.setColor(graveGray);
+		g.fillRect(x, y + 4, 4, 24);
+		g.fillRect(x + 4, y, 4, 28);
+		g.fillRect(x + 8, y, 4, 28);
+		g.fillRect(x + 12, y, 4, 28);
+		g.fillRect(x + 16, y, 4, 28);
+		Color graveShade = new Color(152, 152, 152);
+		g.setColor(graveShade);
+		g.fillRect(x + 4, y + 8, 12, 4);
+		g.fillRect(x + 4, y + 16, 12, 4);
+		g.fillRect(x + 16, y, 4, 4);
+		g.fillRect(x + 20, y + 4, 4, 24);
+		g.setColor(Color.BLACK);
+		g.drawPolygon(graveX, graveY, 8);
+	}
+	
+	public void drawPowerUpArrow(int x, int y, int counter, Color color, Graphics g) {
+		if (counter > 500 && counter < 1000) {
+			y += 4;
+		}
+		g.setColor(Color.BLACK);
+		g.fillRect(x, y + 8, 4, 4);
+		g.fillRect(x + 4, y + 4, 4, 4);
+		g.fillRect(x + 4, y + 12, 4, 12);
+		g.fillRect(x + 8, y, 4, 4);
+		g.fillRect(x + 8, y + 20, 4, 4);
+		g.fillRect(x + 12, y + 4, 4, 4);
+		g.fillRect(x + 12, y + 12, 4, 12);
+		g.fillRect(x + 16, y + 8, 4, 4);
+		g.setColor(color);
+		g.fillRect(x + 4, y + 8, 12, 4);
+		g.fillRect(x + 8, y + 4, 4, 16);
+	}
+
+	public void movement() {
+		if (up == true) {
+			// y--;
+			// Prevents things from moving when the Player reaches the boundaries
+			if (player.getY() > barrierY) {
+				barrierY++;
+				player.setRealLocationY(player.getRealLocationY() - 1);
+//				movementTrackerY--;
+
+				// Move enemies
+				for (int i = 0; i < enemy.size(); i++) {
+					enemy.get(i).setY(enemy.get(i).getY() + 1);
+				}
+				
+				// Move graves
+				for (int i = 0; i < gravesY.size(); i++) {
+					gravesY.set(i, gravesY.get(i) + 1);
+				}
+				
+				// Move power-ups
+				for (int i = 0; i < powerUp.size(); i++) {
+					powerUp.get(i).setY(powerUp.get(i).getY() + 1);
+				}
+				
+				// Move bullets
+				for (int i = 0; i < bullet.size(); i++) {
+					bullet.get(i).setY(bullet.get(i).getY() + 1);
+				}
+			}
+		}
+
+		if (down == true) {
+			// y++;
+			// Prevents things from moving when the Player reaches the boundaries
+			if (player.getY() < barrierY + barrierH - 20) {
+				barrierY--;
+				//locationY++;
+				player.setRealLocationY(player.getRealLocationY() + 1);
+				movementTrackerY++;
+				
+				// Move enemies
+				for (int i = 0; i < enemy.size(); i++) {
+					enemy.get(i).setY(enemy.get(i).getY() - 1);
+				}
+				
+				// Move graves
+				for (int i = 0; i < gravesY.size(); i++) {
+					gravesY.set(i, gravesY.get(i) - 1);
+				}
+				
+				// Move power-ups
+				for (int i = 0; i < powerUp.size(); i++) {
+					powerUp.get(i).setY(powerUp.get(i).getY() - 1);
+				}
+				
+				// Move bullets
+				for (int i = 0; i < bullet.size(); i++) {
+					bullet.get(i).setY(bullet.get(i).getY() - 1);
+				}
+			}
+		}
+		if (left == true) {
+			// x--;
+			// Prevents things from moving when the Player reaches the boundaries
+			if (player.getX() > barrierX) {
+				barrierX++;
+				player.setRealLocationX(player.getRealLocationX() - 1);
+				movementTrackerX--;
+				
+				// Move enemies
+				for (int i = 0; i < enemy.size(); i++) {
+					enemy.get(i).setX(enemy.get(i).getX() + 1);
+				}
+				
+				// Move graves
+				for (int i = 0; i < gravesY.size(); i++) {
+					gravesX.set(i, gravesX.get(i) + 1);
+				}
+				
+				// Move power-ups
+				for (int i = 0; i < powerUp.size(); i++) {
+					powerUp.get(i).setX(powerUp.get(i).getX() + 1);
+				}
+				
+				// Move bullets
+				for (int i = 0; i < bullet.size(); i++) {
+					bullet.get(i).setX(bullet.get(i).getX() + 1);
+				}
+			}
+		}
+		if (right == true) {
+			// x++;
+			// Prevents things from moving when the Player reaches the boundaries
+			if (player.getX() < barrierX + barrierW - 20) {
+				barrierX--;
+				player.setRealLocationX(player.getRealLocationX() + 1);
+				movementTrackerX++;
+				
+				// Move enemies
+				for (int i = 0; i < enemy.size(); i++) {
+					enemy.get(i).setX(enemy.get(i).getX() - 1);
+				}
+				
+				// Move graves
+				for (int i = 0; i < gravesX.size(); i++) {
+					gravesX.set(i, gravesX.get(i) - 1);
+				}
+				
+				// Move power-ups
+				for (int i = 0; i < powerUp.size(); i++) {
+					powerUp.get(i).setX(powerUp.get(i).getX() - 1);
+				}
+				
+				// Move bullets
+				for (int i = 0; i < bullet.size(); i++) {
+					bullet.get(i).setX(bullet.get(i).getX() - 1);
+				}
+			}
+		}
+	}
+
+	public void shootingMechanic() {
+
+		double angle = Math.atan2((player.getX() + 15) - mouseX, (player.getY() + 35) - mouseY);
+		
+		if (shooting == true) {
+			shootingCounter++;
+			if (shootingCounter == 1) {
+				bullet.add(new PlayerBullet(player.getX(), player.getY(), angle));
+//				playerShot.add(true);
+//				bulletLife.add(950);
+//				bulletX.add((double) player.getX());
+//				bulletY.add((double) player.getY());
+//				bulletXAngle.add(Math.sin(angle));
+//				bulletYAngle.add(Math.cos(angle));
+//				bulletAimAngle.add(angle);
+			}
+			if (shootingCounter == 50)
+				shootingCounter = 0;
+		} else {
+			shootingCounter = 0;
+		}
+
+		if (ability) {
+			abilityMechanic();
+		} else if (player.getMana() < 100) {
+			player.setMana(player.getMana() + 0.025 + (manaUp * 0.00625));
+		}
+	}
+
+	public void abilityMechanic() {
+		player.setMana(0);;
+		for (int i = 0; i < 30; i++) {
+			double angle = Math.toRadians(0 + (i * 12));
+			
+			bullet.add(new PlayerBullet((double)mouseX, (double)mouseY, angle));
+//			bulletXAngle.add(Math.sin(angle));
+//			bulletYAngle.add(Math.cos(angle));
+//			bulletAimAngle.add(angle);
+//			playerShot.add(true);
+//			bulletLife.add(950);
+//			bulletX.add((double) mouseX);
+//			bulletY.add((double) mouseY);
+		}
+		ability = false;
+	}
+
+	public void enemyLogic() {
+ //
+		for (int i = 0; i < enemy.size(); i++) {
+			
+			enemy.get(i).movement(player.getX(), player.getY());
+			
+			enemy.get(i).aggro(player.getX(), player.getY(), 20, 20);
+			
+			if (!enemy.get(i).getPassive()) {
+				enemy.get(i).attack(bullet, player);
+				enemy.get(i).setFireRate(enemy.get(i).getFireRate() + 1);
+			}
+			
+			for (int i2 = 0; i2 < bullet.size(); i2++) {
+				if (enemyHit(i, i2) && bullet.get(i2).getOrigin() == "Player") {
+					bulletCleanup(i2);
+					enemy.get(i).setHP((-(player.getAttack() * 2)) + enemy.get(i).getHP());
+				}
+			}
+			
+			// What happens when an enemy dies
+			if (enemy.get(i).getHP() <= 0) {
+				int rando = random.nextInt(23)+1;
+				// should be a 25% chance to get a power up 
+				switch (rando) {
+					case 1 : {
+						powerUp.add(new PowerUp((int)enemy.get(i).getX(), (int)enemy.get(i).getY(), "Vitality"));
+						break;
+					}
+					case 2 : {
+						powerUp.add(new PowerUp((int)enemy.get(i).getX(), (int)enemy.get(i).getY(), "Vitality"));
+						break;
+					}
+					case 3 : {
+						powerUp.add(new PowerUp((int)enemy.get(i).getX(), (int)enemy.get(i).getY(), "Attack"));
+						break;
+					}
+					case 4 : {
+						powerUp.add(new PowerUp((int)enemy.get(i).getX(), (int)enemy.get(i).getY(), "Attack"));
+						break;
+					}
+					case 5 : {
+						powerUp.add(new PowerUp((int)enemy.get(i).getX(), (int)enemy.get(i).getY(), "Defense"));
+						break;
+					}
+					case 6 : {
+						powerUp.add(new PowerUp((int)enemy.get(i).getX(), (int)enemy.get(i).getY(), "Wisdom"));
+						break;
+					}
+					default : {
+//						System.out.println("Nope, " + rando);
+					}
+				}
+				enemy.remove(i);
+				killCount++;
+//				System.out.println("Rando: " + rando);
+			}
+		}
+	}
+
+	public boolean enemyHit(int i, int i2) {
+		if (enemy.size() > 0) {
+			if (bullet.get(i2).getX() < (enemy.get(i).getX() + 130.0) + 40.0 && enemy.get(i).getX() + 40.0 < bullet.get(i2).getX() + 10
+					&& bullet.get(i2).getY() < (enemy.get(i).getY() + 130.0) + 10 && enemy.get(i).getY() < bullet.get(i2).getY() + 10) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public void bulletLogic() {
+		for (int i = 0; i < bullet.size(); i++) {
+			// progressively lowers the lifespan of the bullet
+			bullet.get(i).setLifespan(bullet.get(i).getLifespan()- 1);
+			
+			// moves the bullet
+			bullet.get(i).setX((bullet.get(i).getX() - bullet.get(i).getAngleX() * bullet.get(i).getSpeed()));
+			bullet.get(i).setY((bullet.get(i).getY() - bullet.get(i).getAngleY() * bullet.get(i).getSpeed()));
+			
+			// destroys the bullet when its lifespan becomes 0
+			if (bullet.get(i).getLifespan() <= 0) {
+				bulletCleanup(i);
+			}
+		}
+	}
+	
+	public void bulletCleanup(int i) {
+		bullet.remove(i);
+	}
+
+//	public void bulletCollision() {
+//		for (int i = 0; i < enemyAlive.size(); i++) {
+//			for (int i2 = i * 5; i2 >= i * 5 && i2 < (i * 5) + 5 && i2 < enemyShooting.size(); i2++) {
+//				if (enemyBulletX.get(i2) < x + 20 && x < enemyBulletX.get(i2) + enemyBulletW.get(i2)
+//						&& enemyBulletY.get(i2) < y + 20 && y < enemyBulletY.get(i2) + enemyBulletH.get(i2)) {
+//					if (enemyName.get(i) == "SpyEye") {
+//						if ((defenseUp / 4) < 5) {
+//							playerHP -= 5 - (defenseUp / 4);
+//						} else
+//							playerHP -= 1;
+//					} else if (enemyName.get(i) == "MudMuk") {
+//						if ((defenseUp / 4) < 2) {
+//							playerHP -= 2 - (defenseUp / 4);
+//						} else
+//							playerHP -= 1;
+//					} else if (enemyName.get(i) == "Hugsbert") {
+//						if ((defenseUp / 4) < 10) {
+//							playerHP -= 10 - (defenseUp / 4);
+//						} else
+//							playerHP -= 1;
+//					} else if (enemyName.get(i) == "MadMask") {
+//						if ((defenseUp / 4) < 5) {
+//							playerHP -= 5 - (defenseUp / 4);
+//						} else
+//							playerHP -= 1;
+//					}
+//					enemyShot.set(i2, false);
+//				}
+//			}
+//		}
+//	}
+	
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		
+		Graphics2D g2d = (Graphics2D)g;
+		
+//		drawPowerUpArrow(500, 10, powerUpAnimation, (Color.RED), g);
+		
+		powerUpAnimation++;
+		if (powerUpAnimation == 1000)
+			powerUpAnimation = 0;
+		for (int i = 0; i < powerUp.size(); i++) {
+			powerUp.get(i).draw(g);
+		}
+
+		drawPreviousDeaths(g);
+
+		g.drawRect(barrierX, barrierY, barrierW, barrierH);
+
+		if (playerAlive) {
+			player.draw(g);
+		} else {
+			drawDeadPlayer(player.getX(), player.getY(), g);
+		}
+		
+		for (int i = 0; i < enemy.size(); i++) {
+			enemy.get(i).draw(g);
+		}
+		for (int i = 0; i < bullet.size(); i++) {
+			bullet.get(i).draw(g, g2d, at);
+		}
+		
+		// Statistics
+
+		g.drawString("Personal Best: " + hiScore, 10, 20);
+		g.drawString("Kill Count: " + killCount, 10, 40);
+
+		g.drawString("Enemies Alive: " + enemy.size(), 10, 65);
+		g.drawString("Regen: " + player.getVitality(), 10, 85);
+		g.drawString("Mana Regen: " + player.getWisdom(), 10, 105);
+		g.drawString("Damage: " + player.getAttack(), 10, 125);
+		g.drawString("Defense: " + player.getDefense(), 10, 145);
+		
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		System.out.println(player.getX());
+		spawning(); // TODO
+		
+//		if (manaUp > 20) manaUp = 20; // mana cap
+		
+		// increases the rate at which the player heals
+		regen++;
+		if (regen > (1000 - (player.getVitality() * 5)) && player.getHP() < 100) {
+			player.setHP(2 + player.getHP());
+			regen = 0;
+		}
+		if (player.getHP() > 100) {
+			player.setHP(100);
+		}
+		for (int i = 0; i < powerUp.size(); i++) {
+			if (powerUp.get(i).collected(player.getX(), player.getY(), player.getW(), player.getH())) {
+				player.collectPowerUp(powerUp.get(i).getType());
+				
+				powerUp.remove(i);
+			}
+		}
+
+		if (player.getHP() <= 0) {
+			playerAlive = false;
+		}
+
+		if (playerAlive) {
+			movement();
+			shootingMechanic();
+//			bulletCollision();
+		} else {
+			try {
+				recordDeath(player.getRealLocationX(), player.getRealLocationY());
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+
+		enemyLogic();
+		
+		bulletLogic();
+		
+		try {
+			highScoreWriter(hiScore);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		
+
+		repaint();
+	}
+
+	public void keyPressed(KeyEvent e) {
+		int key = e.getKeyCode();
+		if (key == KeyEvent.VK_W) {
+			up = true;
+		}
+		if (key == 'A') {
+			left = true;
+		}
+		if (key == 'S') {
+			down = true;
+		}
+		if (key == 'D') {
+			right = true;
+		}
+		if (key == KeyEvent.VK_SPACE && player.getMana() >= 100) {
+			ability = true;
+		}
+	}
+	public void keyReleased(KeyEvent e) {
+		int key = e.getKeyCode();
+		if (key == KeyEvent.VK_W) {
+			up = false;
+		}
+		if (key == 'A') {
+			left = false;
+		}
+		if (key == 'S') {
+			down = false;
+		}
+		if (key == 'D') {
+			right = false;
+		}
+		if (key == KeyEvent.VK_SPACE && player.getMana() == 100) {
+			ability = false;
+		}
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+	@Override
+	public void mousePressed(MouseEvent e) {
+		shooting = true;
+	}
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		shooting = false;
+	}
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		mouseX = e.getX();
+		mouseY = e.getY();
+	}
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		mouseX = e.getX();
+		mouseY = e.getY();
+	}
+	@Override
+	public void mouseEntered(MouseEvent e) {
+
+	}
+	@Override
+	public void mouseExited(MouseEvent e) {
+
+	}
+
+	private void initComponents() {
+		javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+		this.setLayout(layout);
+		layout.setHorizontalGroup(
+				layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 400, Short.MAX_VALUE));
+		layout.setVerticalGroup(
+				layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING).addGap(0, 300, Short.MAX_VALUE));
+	}
+
+}

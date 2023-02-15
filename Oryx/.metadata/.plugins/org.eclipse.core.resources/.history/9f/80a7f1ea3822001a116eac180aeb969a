@@ -1,0 +1,124 @@
+import java.awt.Graphics;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Stack;
+
+public class Deck {
+
+//	private Stack<Card> card;
+	Card[] card;
+	
+//	Constructors
+	
+	Deck(){
+//		card = new Stack<Card>();
+		card = new Card[52];
+	}
+	
+//	Methods
+	
+	public void assignCards() {
+		for (int i = 0; i < card.length; i++) {
+			card[i] = new Card(0, i*20, 90, 120, true);
+		}
+		
+		int i2 = 1;
+		for (int i = 0; i < card.length; i++) {
+			if ((((i-((i2-1)*13))+1)%1) == 0) card[i].setRank("Ace");
+			if ((((i-((i2-1)*13))+1)%2) == 0) card[i].setRank("2");
+			if ((((i-((i2-1)*13))+1)%3) == 0) card[i].setRank("3");
+			if ((((i-((i2-1)*13))+1)%4) == 0) card[i].setRank("4");
+			if ((((i-((i2-1)*13))+1)%5) == 0) card[i].setRank("5");
+			if ((((i-((i2-1)*13))+1)%6) == 0) card[i].setRank("6");
+			if ((((i-((i2-1)*13))+1)%7) == 0) card[i].setRank("7");
+			if ((((i-((i2-1)*13))+1)%8) == 0) card[i].setRank("8");
+			if ((((i-((i2-1)*13))+1)%9) == 0) card[i].setRank("9");
+			if ((((i-((i2-1)*13))+1)%10) == 0) card[i].setRank("10");
+			if ((((i-((i2-1)*13))+1)%11) == 0) card[i].setRank("Jack");
+			if ((((i-((i2-1)*13))+1)%12) == 0) card[i].setRank("Queen");
+			if ((((i-((i2-1)*13))+1)%13) == 0) card[i].setRank("King");
+			
+			if (i2 == 1) card[i].setSuit("Spades");
+			else if (i2 == 2) card[i].setSuit("Hearts");
+			else if (i2 == 3) card[i].setSuit("Clubs");
+			else if (i2 == 4) card[i].setSuit("Diamonds");
+			
+			if (card[i].getSuit() == "Spades" || card[i].getSuit() == "Clubs")
+				card[i].setColor("Black");
+			else card[i].setColor("Red");
+			
+			if (((i+1) % 13) == 0) i2++;
+		}
+	}
+	
+	public void shuffleCards(Card[] card) {
+		Random r = new Random();
+		for (int i = 0; i < card.length; i++) {
+			card[i] = this.card[i];
+		}
+		for (int i = 0; i < card.length; i++) {
+			 int r1 = i + r.nextInt(52 - i); 
+			 Card temp = card[r1]; 
+	         card[r1] = card[i]; 
+	         card[i] = temp; 
+		}	
+		for (int i = 0; i < card.length; i++) {
+			this.card[i] = card[i];
+			card[i].loadImage(i);
+		}
+	}
+		
+0	public void drawCards(Card[] card, Graphics g) {
+		for (int i = 0; i < card.length; i++) {
+			card[i].draw(i, g);
+		}
+	}
+	
+//	Getters
+	
+	public Card getCard(int i) {
+		return card[i];
+	}
+	
+	public int getCardX(int i) {
+		return card[i].getX();
+	}
+	
+	public int getCardY(int i) {
+		return card[i].getY();
+	}
+	
+	public int getCardW(int i) {
+		return card[i].getW();
+	}
+	
+	public int getCardH(int i) {
+		return card[i].getH();
+	}
+	
+	public boolean getFlipped(int i) {
+		return card[i].getFlipped();
+	}
+	
+//	Setters
+	
+	public void setCardX(int x, int i) {
+		card[i].setX(x);
+	}
+
+	public void setCardY(int y, int i) {
+		card[i].setY(y);
+	}
+	
+	public void setCardW(int w, int i) {
+		card[i].setX(w);
+	}
+
+	public void setCardH(int h, int i) {
+		card[i].setY(h);
+	}
+	
+	public void setFlipped(boolean f, int i) {
+		card[i].setFlipped(f);
+	}
+}
